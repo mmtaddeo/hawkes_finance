@@ -1,0 +1,240 @@
+
+\documentclass[11pt]{article}
+
+%............................................  LATEX PACKAGES:
+%\usepackage[brazil]{babel} %pacote para entorno em portugues
+\usepackage{float}
+\usepackage{enumerate} %pacotes para entornos matematicos
+\usepackage{amsfonts, amssymb, amsmath, amsthm} %pacotes de Matematica
+\usepackage{graphicx}
+\usepackage{ulem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float,times}
+\usepackage{tikz}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+%\usepackage{hyperref}
+\usepackage{natbib}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\baselinestretch}{1.50}\normalsize
+
+%............................................  THEOREM LIKE SETTINGS:
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corol}{Corollary}
+\newtheorem{example}{Example}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+    
+\floatstyle{ruled}
+\newfloat{Algoritmo}{thp}{alg}[section]
+\floatname{Algoritmo}{Algorithm}
+
+%............................................  CUSTOMIZED PROBABILITY COMMANDS:
+\newcommand\smallbullet{\raisebox{-0.5ex}{\scalebox{1.5}{$\cdot$}}}
+
+\newcommand{\normal}{\mathcal{N}}
+
+\newcommand{\simind}{\stackrel{\text{ind}}{\sim}}
+\newcommand{\simiid}{\stackrel{\text{iid}}{\sim}}
+
+\DeclareMathOperator{\aic}{AIC}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator{\cl}{cl}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\eaic}{EAIC}
+\DeclareMathOperator{\maximize}{Maximize}
+\DeclareMathOperator{\median}{median}
+\DeclareMathOperator{\Prob}{P}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spn}{span}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\var}{Var}
+
+% Finance operators
+\DeclareMathOperator{\RV}{RV}
+\DeclareMathOperator{\RVol}{RVol}
+
+%............................................  CUSTOMIZED MATH COMMANDS:
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\rm I\!N}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\rm I\!R}
+\newcommand{\Z}{\mathbb{Z}}
+
+\newcommand \dd[1]{\,\textrm d{#1}} 
+
+\newcommand{\independent}{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+
+\newcommand{\prodint}{\mathscr{P}}
+\newcommand{\prodequal}{\stackrel{*}{=}}
+
+\let\oldmarginpar\marginpar
+\renewcommand{\marginpar}[2][rectangle,draw,fill=white, text=red,text width= 3cm]{
+    \oldmarginpar{
+    \scriptsize \tikz \node at (0,0) [#1]{#2};}
+    }
+
+\renewcommand{\thefootnote}{(\roman{footnote})}
+
+%............................................ PAGE LAYOUT:
+\addtolength{\oddsidemargin}{-.85in}%
+\addtolength{\evensidemargin}{-1in}%
+\addtolength{\textwidth}{1in}%
+\addtolength{\textheight}{1.2in}%
+\addtolength{\topmargin}{-.9in}%
+
+\definecolor{orange}{RGB}{255,127,0}
+
+\begin{document}
+
+%............................................  BODY TEXT:
+
+\title{Hawkes Processes and Finance (Provis\'orio)}
+\author{Marcelo M. Taddeo \& André Portela Santos}
+\date{\today}
+
+\maketitle
+
+{\color{blue}
+\section*{Goals and Remarks (to be deleted)}
+
+\begin{enumerate}
+\item Regime switching? High-frequency?
+\item \underline{Proposal}: state dependent GARCH-jump models using Hawkes processes applied to ?????. Contamination or not?
+\item embedding
+\item There are two different scenarios to consider: high-frequency data and ``standard'' data. GARCH processes are tipically not well suited to high-frequency data. In this case, we should consider other aproaches (e.g., realized volatility).
+\item High-frequency data for commodities (e.g., power/electricity)?
+\item ...
+\end{enumerate}
+}
+
+\section*{Summary}
+
+This paper develops a novel approach to modelling financial time series with a specific emphasis on jumps. Unlike traditional models that rely on Poisson processes for jump dynamics, our method models jumps using a Hawkes process, which allows for self-excitation and clustering effects. Hawkes processes capture the dependence of current jump intensities on past jumps, reflecting market contagion effects. Poisson processes assume independent jump occurrences, which fails to account for realistic patterns of jump clustering observed in financial markets. Unlike existing studies that consider Hawkes processes for financial time series, our specification incorporates regime-switching dynamics, allowing the underlying jump and conditional heteroskedasticity processes to vary across different states.
+
+\section{Introduction}
+
+Underlying probability space will be denoted by \((\Omega,\mathcal{F},\Prob)\).
+
+%========================================================
+
+\section{Methodology}
+
+\subsection{Background}
+
+\subsubsection{Hawkes Processes}
+
+A multivariate Hawkes (or self-excitation) process is a counting process \(N=(N_1,\dots,N_k)\) whose (vector of) intensity functions depend on past realizations in the sense that
+\begin{equation*}
+\lambda(t)
+=\alpha+\int_0^tK(t-u)dN(u)
+:=\alpha+K*dN(t),
+\end{equation*}
+where \(\alpha\in\R_+^k\) and \(K(t)\) is a \(k\times k\) time-varying matrix whose components are the kernels \(k_{ij}:[0,\infty)\to[0,\infty)\). Each intensity is therefore related to the jump dynamics of an asset \(A\in\{1,\dots,k\}\). Typically, these kernels are of the form \(k_{ij}(t)=\alpha_{ij}e^{-\beta_{ij}t}\). Under this particular parameterization, each new event of type \(i\) raises the intensity function associated with events of type \(j\) by a constant \(\alpha_{ij}\), whose effect tends to subsequently decrease at a rate dictated by \(\beta_{ij}\).
+
+\subsubsection{State Dependent Hawkes Process}
+
+Assume now that the system evolves over time under different regimes determined by a finite number of unobservable states. The states are described by the continuous-time process \(S(t)\) whose state space \(\mathbb{S}=\{1,\dots,s\}\) is equipped with the \(\sigma\)-field \(\mathcal{S}=2^\mathbb{S}\). To enable regime switching using Hawkes processes, we follow the framework described in \cite{patrichi-2022}. Hence, if \(T_1\leq T_2\leq\cdots\) denote the (pooled) times to event and \(A_n\) represents the asset associated to the \(n\)th event, then the corresponding transition probabilities are given by
+\begin{equation*}
+\mathbbm{P}_{a}(S(T_n-),j)=\Prob_k(S(T_n)=j|A_n=a, \mathcal{F}_{T_n-}^{N,S}),
+\end{equation*}
+where \(\displaystyle S(t-)=\lim_{u\to t-}S(u)\) and \(a\in\{1,\dots,k\}\). It should be noticed then that there is on transition matrix \(\mathbbm{P}_a\) for each asset. The collection os \(\sigma\)-fields \(\{\mathcal{F}_t^{N,S}:t\geq0\}\) represents the natural filtration generated by \(N\) and \(S\). Thus, the associated counting processes are given by \(N_a(t)=\sum_n\mathbbm{1}(A_n=a,T_n\leq t)\) and the respective intensity functions by
+\begin{equation*}
+\lambda(t)
+=\alpha+\int_0^tK_{S(u)}(t-u)dN(u)
+:=\alpha+K_{\tilde S_t}*dN(t),
+\end{equation*}
+where the kernel matrix \(K\) depends now on the state process \(S\), and \(\tilde S_t(u)=S(t-u)\).
+
+\subsubsection{GARCH-Jump Models}
+
+The standard \(\text{GARCH}(p,q)\) model with a jump structure assumes that the log-return \(r_t\) is governed by the model\marginpar{\color{red}\tiny \'E razo\'avel considerar \(q=p=1\)?}
+\begin{equation*}
+\begin{split}
+r_t&=\mu+\sqrt{h_t}\varepsilon_t+\sum_{k=1}^{N(t)}\zeta_{tk}\\
+h_t&=\omega+\sum_{i=1}^q\alpha_i\varepsilon_{t-i}^2+\sum_{i=1}^p\beta_ih_{t-i}
+\end{split}
+\end{equation*}
+where \(\varepsilon_t\stackrel{\text{ind}}{\sim}N(0,1)\), \(\zeta_{tk}\sim N(\theta_t,\delta_t^2)\) and \(N(t)\sim\text{Poisson}(\lambda_t)\). However, several generalizations of this model have been proposed. For instance, \cite{chan-2002} suggested the Autoregressive Jump Intensity (ARJI) model where the intensity have the autoregressive structure
+\begin{equation*}
+\lambda_t=\alpha_0+\sum_{i=1}^r\rho_i\lambda_{t-i}+\sum_{i=1}^s\gamma_i\xi_{t-i}.
+\end{equation*}
+
+In order to tackle the problem contagion (intra-series or between series), it is reasonable to consider the Hawkes process as the counting process \(N\). For instance, \cite{zhang-2024} proposes the HJI-GARCH model where the volatility (relative to  log-returns of crude oil) is assumed to follow a univariate GARCH together with the parametric Hawkes process governed by the intensity \(\lambda_t=\alpha_0+\alpha_1\int_0^t\exp\{-\beta(t-u)\}dN(u)\).
+
+\subsection{Regime Switching GARCH Model}
+
+\begin{equation*}
+\begin{split}
+r_t&=\mu_{S(t)}+\sqrt{h_{S(t),t}}\varepsilon_t+\sum_{k=1}^{N(t)}\zeta_{tk}\\
+h_t&=\omega+\sum_{i=1}^q\alpha_i\varepsilon_{t-i}^2+\sum_{i=1}^p\beta_ih_{t-i}
+\end{split}
+\end{equation*}
+
+%========================================================
+
+\section{High-Frequency Financial Data}
+
+It is widely accepted that high-frequency data have special features that should be taken into account. First, they are not observed regularly over time. Indeed, it is natural to assume that buy and sell orders (bid/ask), and therefore executed transactions, occur at random times. One possible strategy is to use the calendar time sampling in which the data is subsampled at a lower frequency (e.g., every second, or every five minutes). Although this strategy ``regularizes'' the sampling process, it has an inherent cost due to the loss of information. Second, they are subject to microstructure noise due to trading process that separates the efficient price from the observed price. Finally, high-frequency log-prices are not normal.
+
+\begin{itemize}
+\item \(Y(t)=(Y_1(t),\dots,Y_k(t))^\top\): log-prices at time \(t\)
+\item The underlyng process is the semimartingale
+\begin{equation*}
+Y(t)=\int_0^t\mu(u)\dd u+\int_0^t\sigma(u)\dd W(u)+J(t)
+\end{equation*}
+where \(\mu(t)=(\mu_1(t),\dots,\mu_k(t))^\top\) is a vector of predictable process, \(\sigma(t)\) is \((k\times k)\)-matrix of CàDLàG process, \(W(t)=(W_1(t),\dots,W_k(t))^\top\) is a vector of Brownian motions and \(J(t)=\sum_{j=1}^{N(t)}\zeta_j\) stands for the jumps up to time \(t\). Notice that \(\zeta_j=(\zeta_{1j},\dots,\zeta_{kj})^\top\). Alternatively, we could write
+\begin{equation*}
+\dd Y(t)=\mu(t)\dd t+\sigma(t)\dd W(t)+\dd J(t)
+\end{equation*}
+\item \(N(t)\): multivariate Hawkes process
+\item \(\delta\): (low-frequency) time period (\textit{e.g.}, trading day or month)
+\item \(\delta/M\): ``high-frequency'' period between observations.
+\item \(Y_{i,j}=Y((i-1)\delta+j\delta/M)\): log-price at the \(j\)th time interval in the \(\delta\)th trading period.
+\item \(r_{i,j}=Y_{i,j}-Y_{i,j-1}\): intraday returns
+\end{itemize}
+
+\section{HAR-Jump Models}
+
+The Heterogeneous Autoregressive model of Realized Volatility (HAR-RV) was introduced by \cite{corsi-2009} as an alternative to standard GARCH and stochastic volatility models. Its goal is to reproduce the usual stylized facts that these models are unable to reproduce. HAR-RV is an additive cascade model of volatility based on the realized volatility \(\RVol_t:=\sqrt{\RV_t}\). The basic idea is to consider the contributions of realized volatilities in different time horizons to the real volatility in the log-price diffusion model. The term cascade comes from the fact that volatility at a higher frequency is represented iteratively in terms of volatilities at lower frequencies. For example, if we consider only daily (d), weekly (w) and monthly (m) frequencies, then the daily volatility is described in terms of the weekly volatility which in turn is described in terms of the monthly volatility as well as the corresponding realized volatilities. The resulting model is therefore given by the ``three-factor'' stochastic volatility model
+\begin{equation*}
+\RVol_{t+1}^{(d)}=c+\beta^{(d)}\RVol_t^{(d)}+\beta^{(w)}\RVol_t^{(w)}+\beta^{(m)}\RVol_t^{(m)}+\omega_{t+1},
+\end{equation*}
+where \(t\) represents the time at the highest (daily) frequency and \(\RVol_t^{(d)}\) the quadratic variance at this scale. The quantities \(\RVol_t^{(m)}\) and \(\RVol_t^{(m)}\) are the realized volatilities at lower frequencies obtained by properly averaging \(\RVol_t^{(d)}\), see \cite{corsi-2009} for details.
+
+\subsection{Our Model}
+
+
+
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Chan and Maheu}{2002}]{chan-2002} Chan, W.H. and Maheu, J.M. (2002). Conditional jump dynamics in stock market returns. \textit{Journal of Business \& Economic Statistics}, \textbf{20(3)}, 377--389.
+
+\bibitem[\protect\citeauthoryear{Corsi}{2009}]{corsi-2009} Corsi, F. (2009). A simple approximate long-memory model of realized volatility. \textit{Journal of Financial Econometrics}, \textbf{7(2)}, 174--196.
+
+\bibitem[\protect\citeauthoryear{Morariu-Patrichi and Pakkanen}{2022}]{patrichi-2022} Morariu-Patrichi, M. and Pakkanen, M. (2022). State-dependent Hawkes processes and their application to limit order book modelling. \textit{Quantitative Finance}, \textbf{22(3)}, 563--583.
+
+\bibitem[\protect\citeauthoryear{Zhang \textit{et al}.}{2024}]{zhang-2024} Zhang, L., Chen, Y. and Bouri, E. (2024). Time-varying jump intensity and volatility forecasting of crude oil returns. \textit{Energy Economics}, \textbf{129}, 107236.
+
+%\bibitem[\protect\citeauthoryear{Eichler}{2012}]{eichler-2012} Eichler, M. (2012). Causal inference in time series analysis. In Berzuini, C., Dawid, A.P., and Bernardinelli, L. (eds.), {\it Causality}, 327 -- 354. John Wiley and Sons.
+
+%\bibitem[\protect\citeauthoryear{Oden and Reddy}{1976}]{oden-reddy-1976}
+%Oden, J.T. and Reddy, J.N. (1976). {\it An Introduction to Mathematical Theory of Finite Elements}. New York: John Wiley \& Sons.
+
+%\bibitem[\protect\citeauthoryear{Wahba}{1990}]{wahba-1990}
+%Wahba, G. (1990). {\it Spline Models for Observational Data}. CBMS 59, SIAM, Philadelphia.
+\end{thebibliography}
+
+\appendix
+
+\section{Proofs}
+
+\end{document}
+
